@@ -1,33 +1,33 @@
-# Basis-Bibliotheken einfügen
 from flask import Flask, Response, request
-from flask_cors import CORS
 import pandas as pd
-import os
 import pickle
+from flask_cors import CORS
 
 app = Flask(__name__)
-
 CORS(app)
 
-# Load training data
-training_data = pd.read_csv(os.path.join('data', 'auto-data-mpg.csv'))
+file_to_open = open("models/baummethoden.pickle", "rb")
+trained_model = pickle.load(file_to_open)
+file_to_open.close()
 
-# Load trained model
-trained_model = pickle.load(open(os.path.join('data', 'models', 'baummethoden_lr.pickle'), 'rb'))
 
-@app.route("/", methods=["GET"])
-def index():
-    return {"Hallo": "World"}
+@app.route("/")
+def hello():
+    return "Hello, World!"
 
-@app.route("/hello_world", methods=["GET"])
+
+@app.route("/hello_world")
 def hello_world():
-    return "<h1>Hello World!</h1>"
+    return "<h1>test</h1> <p>Hello, World!</p>"
 
-@app.route("/training_data", methods=["GET"])
-def get_training_data():
-    return Response(training_data.to_json(), mimetype="application/json")
 
-@app.route("/predict", methods=["GET"])
+@app.route("/training_data")
+def training_data():
+    data = pd.read_csv("data/auto-mpg.csv", sep=";")
+    return Response(data.to_json(), mimetype="application/json")
+
+
+@app.route("/predict")
 def predict():
     zylinder = request.args.get("zylinder")
     ps = request.args.get("ps")
@@ -35,13 +35,11 @@ def predict():
     beschleunigung = request.args.get("beschleunigung")
     baujahr = request.args.get("baujahr")
 
-    # creating a prediction from Features
-    prediction = trained_model.predict([zylinder, ps, gewicht, beschleunigung, baujahr])
+    feature_names = ["zylinder", "ps", "gewicht", "beschleunigung", "baujahr"]
 
-    app.logger.info("Prediction: {}".format(prediction))
+    input_data = pd.DataFrame(
+        [[zylinder, ps, gewicht, beschleunigung, baujahr]], columns=feature_names
+    )
+    prediction = trained_model.predict(input_data)
 
-    # Return JSON response
-    return {"result": prediction.tolist()}
-
-#if __name__ == "__main__":
-    #app.run(debug=True)
+    return {"result": prediction.item(0)}
