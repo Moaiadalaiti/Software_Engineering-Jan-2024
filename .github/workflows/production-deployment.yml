@@ -28,8 +28,8 @@ jobs:
       - name: Upload trained model
         uses: actions/upload-artifact@v2
         with:
-          name: baummethoden_lr.pickle
-          path: data/models/baummethoden_lr.pickle
+          name: baummethoden.pickle
+          path: models/baummethoden_lr.pickle
       - name: Push changes to heroku branch
         shell: bash
         run: |
